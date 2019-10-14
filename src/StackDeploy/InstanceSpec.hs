@@ -28,17 +28,18 @@ newtype RoleARN = RoleARN Text
 type Provider = Provider.Provider InstanceSpec
 
 data InstanceSpec = InstanceSpec
-  { capabilities :: [CF.Capability]
-  , name         :: Name
-  , onSuccess    :: forall m r . (AWSConstraint r m, MonadAWS m) => m ()
-  , parameters   :: Parameters
-  , prepareSync  :: forall m r . (AWSConstraint r m, MonadAWS m) => m ()
-  , roleARN      :: Maybe RoleARN
-  , template     :: Template
+  { capabilities      :: [CF.Capability]
+  , name              :: Name
+  , onSuccess         :: forall m r . (AWSConstraint r m, MonadAWS m) => m ()
+  , parameters        :: Parameters
+  , parametersFromEnv :: forall m r . (AWSConstraint r m, MonadAWS m) => m Parameters
+  , prepareSync       :: forall m r . (AWSConstraint r m, MonadAWS m) => m ()
+  , roleARN           :: Maybe RoleARN
+  , template          :: Template
   }
 
 get
-  :: forall m . MonadIO m
+  :: forall m r . (AWSConstraint r m, MonadAWS m)
   => Provider
   -> Name
   -> Parameters
@@ -47,20 +48,30 @@ get provider targetName userParameters = do
   instanceSpec <-
     Provider.get "instance-spec" name provider targetName
 
+  parameterUpdates <- parametersFromEnv instanceSpec
+
   pure $ instanceSpec
-    { parameters = Parameters.union (expandedParameters instanceSpec) userParameters
+    { parameters
+      =       expandedParameters instanceSpec
+      `union` parameterUpdates
+      `union` userParameters
     }
 
   where
+    expandedParameters :: InstanceSpec -> Parameters
     expandedParameters InstanceSpec{..} =
       Parameters.expandTemplate parameters template
 
+    union = Parameters.union
+
+
 mk :: Name -> Template -> InstanceSpec
 mk name template = InstanceSpec
-  { capabilities = empty
-  , onSuccess    = pure ()
-  , parameters   = Parameters.empty
-  , prepareSync  = pure ()
-  , roleARN      = empty
+  { capabilities      = empty
+  , onSuccess         = pure ()
+  , parameters        = Parameters.empty
+  , parametersFromEnv = pure Parameters.empty
+  , prepareSync       = pure ()
+  , roleARN           = empty
   , ..
   }
