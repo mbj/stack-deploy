@@ -59,8 +59,8 @@ testTree provider
 templateTest :: Template -> Tasty.TestTree
 templateTest template@Template{..} =
   Tasty.goldenTest
-    (convertText name)
+    (convert name)
     expectedPath
     (pure . Text.decodeUtf8 . LBS.toStrict $ encode template)
   where
-    expectedPath = "test" </> "template" </> convertText name <.> ".json"
+    expectedPath = "test" </> "template" </> convert name <.> ".json"

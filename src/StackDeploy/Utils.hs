@@ -87,10 +87,10 @@ fetchOutput stack soutput =
     failOutputKey :: Text -> m a
     failOutputKey message
       = failStack
-      $ "Output " <> convertText key <> " " <> message
+      $ "Output " <> convert key <> " " <> message
 
     failStack :: Text -> m a
     failStack message
       = fail
-      . convertText
+      . convert
       $ "Stack: " <> view CF.sStackName stack <> " " <> message

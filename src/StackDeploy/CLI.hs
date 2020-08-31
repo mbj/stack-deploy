@@ -116,7 +116,7 @@ parserInfo instanceSpecProvider = wrapHelper commands "stack commands"
       success
       where
         printOutput :: CF.Output -> m ()
-        printOutput = liftIO . Text.putStrLn . convertText . show
+        printOutput = liftIO . Text.putStrLn . convert . show
 
     delete :: InstanceSpec.Name -> m ExitCode
     delete = maybe success (exitCode <=< perform . OpDelete) <=< getStackId
@@ -183,12 +183,12 @@ parameter = option
   (long "parameter" <> help "Set stack parameter")
 
 parameterReader :: ReadM Parameter
-parameterReader = eitherReader (Text.parseOnly parser . convertText)
+parameterReader = eitherReader (Text.parseOnly parser . convert)
   where
     parser = do
-      name <- ParameterName . convertText <$> Text.many1 (Text.satisfy allowChar)
+      name <- ParameterName . convert <$> Text.many1 (Text.satisfy allowChar)
       Text.skip (== ':')
-      value <- ParameterValue . convertText <$> Text.many1 Text.anyChar
+      value <- ParameterValue . convert <$> Text.many1 Text.anyChar
       void Text.endOfInput
 
       pure $ Parameter name value

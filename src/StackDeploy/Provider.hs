@@ -9,7 +9,8 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified Data.List           as List
 
 newtype Name a = Name Text
-  deriving newtype (Hashable, ToText)
+  deriving (Conversion String) via Text
+  deriving newtype (Hashable, Conversion Text)
   deriving stock   (Eq, Ord, Show)
 
 newtype Provider a = Provider (HashMap (Name a) a)

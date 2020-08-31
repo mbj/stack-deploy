@@ -181,7 +181,7 @@ printEvent event = do
     resourceStatus =
       maybe
         "[unknown-resource-type]"
-        (convertText . show)
+        (convert . show)
         (view CF.seResourceStatus event)
 
     timeFormat :: String
@@ -189,7 +189,7 @@ printEvent event = do
 
     timestamp :: Text
     timestamp
-      = convertText
+      = convert
       . formatTime defaultTimeLocale timeFormat
       $ view CF.seTimestamp event
 
@@ -233,7 +233,7 @@ getExistingStack name = maybe failMissingRequested pure =<< doRequest
     failMissingRequested
       = throwM
       . AssertionFailed
-      $ "Successful request to stack " <> convertText name <> " did not return the stack"
+      $ "Successful request to stack " <> convert name <> " did not return the stack"
 
     describeSpecificStack :: CF.DescribeStacks
     describeSpecificStack = set CF.dStackName (pure $ toText name) CF.describeStacks
@@ -249,14 +249,14 @@ getOutput name key = do
   stack <- getExistingStack name
 
   maybe
-    (failStack $ "Output " <> convertText key <> " missing")
-    (maybe (failStack $ "Output " <> convertText key <> " has no value") pure . view CF.oOutputValue)
+    (failStack $ "Output " <> convert key <> " missing")
+    (maybe (failStack $ "Output " <> convert key <> " has no value") pure . view CF.oOutputValue)
     (Foldable.find ((==) (pure key) . view CF.oOutputKey) (view CF.sOutputs stack))
 
   where
     failStack :: Text -> m a
     failStack message
-      = liftIO . fail . convertText $ "Stack: " <> convertText name <> " " <> message
+      = liftIO . fail . convert $ "Stack: " <> convert name <> " " <> message
 
 stackNames :: MonadAWS m => ConduitT () InstanceSpec.Name m ()
 stackNames =
